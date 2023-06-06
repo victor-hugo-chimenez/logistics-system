@@ -22,7 +22,7 @@ func NewController(service DeliveryService) *Controller {
 	}
 }
 
-func (c *Controller) FindById(request *http.Request, response http.ResponseWriter) {
+func (c *Controller) FindById(response http.ResponseWriter, request *http.Request) {
 	slicedPath := strings.Split(request.URL.Path, "/")
 	idParam := strings.Join(slicedPath[1:], ",")
 

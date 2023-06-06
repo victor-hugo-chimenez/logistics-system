@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"log"
 )
 
 var Schema = `
@@ -39,4 +40,22 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Delivery, error) {
 		return nil, err
 	}
 	return &delivery, nil
+}
+
+func (r *Repository) CreateEntity(ctx context.Context, delivery Delivery) (int64, error) {
+	tx := r.db.MustBegin()
+
+	result := tx.MustExecContext(ctx, "INSERT INTO delivery (order_id, driver_id) VALUES ($1, $2)", delivery.OrderId, delivery.DriverId)
+
+	if err := tx.Commit(); err != nil {
+		log.Fatalln(err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return id, nil)
+
 }
