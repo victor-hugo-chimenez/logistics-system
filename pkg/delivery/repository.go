@@ -36,13 +36,13 @@ func NewRepository(db *sqlx.DB) *Repository {
 
 func (r *Repository) FindById(ctx context.Context, id int) (*Delivery, error) {
 	var delivery Delivery
-	if err := r.db.Get(&delivery, "SELECT * FROM delivery WHERE id=?", id); err != nil {
+	if err := r.db.Get(&delivery, "SELECT * FROM delivery WHERE id=$1", id); err != nil {
 		return nil, err
 	}
 	return &delivery, nil
 }
 
-func (r *Repository) CreateEntity(ctx context.Context, delivery Delivery) (int64, error) {
+func (r *Repository) InsertEntity(ctx context.Context, delivery Delivery) (int64, error) {
 	tx := r.db.MustBegin()
 
 	result := tx.MustExecContext(ctx, "INSERT INTO delivery (order_id, driver_id) VALUES ($1, $2)", delivery.OrderId, delivery.DriverId)
@@ -56,6 +56,5 @@ func (r *Repository) CreateEntity(ctx context.Context, delivery Delivery) (int64
 		log.Fatalln(err)
 	}
 
-	return id, nil)
-
+	return id, nil
 }

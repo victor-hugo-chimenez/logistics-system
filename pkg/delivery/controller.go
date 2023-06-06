@@ -3,9 +3,10 @@ package delivery
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type DeliveryService interface {
@@ -23,8 +24,7 @@ func NewController(service DeliveryService) *Controller {
 }
 
 func (c *Controller) FindById(response http.ResponseWriter, request *http.Request) {
-	slicedPath := strings.Split(request.URL.Path, "/")
-	idParam := strings.Join(slicedPath[1:], ",")
+	idParam := request.URL.Query().Get("id")
 
 	id, err := strconv.Atoi(idParam)
 
@@ -34,5 +34,41 @@ func (c *Controller) FindById(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	c.service.FindById(request.Context(), id)
+	delivery, err := c.service.FindById(request.Context(), id)
+	if err != nil {
+		buffer := bytes.NewBufferString("Deu ruim!").Bytes()
+		response.Write(buffer)
+		return
+	}
+
+	json.NewEncoder(response).Encode(map[string]interface{}{
+		"statusCode": 200,
+		"result":     delivery,
+	})
+
+}
+
+func (c Controller) FindAll(response http.ResponseWriter, request *http.Request) {
+
+}
+
+func (c Controller) HandleRequest(response http.ResponseWriter, request *http.Request) {
+	switch request.Method {
+	case http.MethodGet:
+		if request.URL.Query().Has("id") {
+			c.FindById(response, request)
+			return
+		} else {
+			c.FindAll(response, request)
+			return
+		}
+	case http.MethodPost:
+		fmt.Println("post")
+	case http.MethodPut:
+		fmt.Println("put")
+	case http.MethodDelete:
+		fmt.Println("delete")
+	default:
+		http.Error(response, "Método não suportado", http.StatusMethodNotAllowed)
+	}
 }

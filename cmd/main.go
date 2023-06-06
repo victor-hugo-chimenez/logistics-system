@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"io"
 	"log"
 	"logistics_system/pkg/delivery"
 	"net"
@@ -37,19 +36,6 @@ func startDB() *sqlx.DB {
 	return db
 }
 
-func getRoot(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	fmt.Printf("%s: got / request\n", ctx.Value(keyServerAddr))
-	io.WriteString(w, "This is my website!\n")
-}
-func getHello(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	fmt.Printf("%s: got /hello request\n", ctx.Value(keyServerAddr))
-	io.WriteString(w, "Hello, HTTP!\n")
-}
-
 func main() {
 	log.Printf("Starting database\n")
 	db := startDB()
@@ -60,14 +46,13 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/delivery/:id", controller.FindById)
-	mux.HandleFunc("/delivery")
+	mux.HandleFunc("/delivery", controller.HandleRequest)
 
-	serverPort := "3000"
+	serverAddress := "127.0.0.1:3000"
 
 	ctx := context.Background()
 	server := &http.Server{
-		Addr:    serverPort,
+		Addr:    serverAddress,
 		Handler: mux,
 		BaseContext: func(l net.Listener) context.Context {
 			ctx = context.WithValue(ctx, keyServerAddr, l.Addr().String())
