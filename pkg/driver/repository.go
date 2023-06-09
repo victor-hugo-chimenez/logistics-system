@@ -38,7 +38,7 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Driver, error) {
 func (r *Repository) CreateDriver(ctx context.Context, driver *Driver) error {
 	tx := r.db.MustBegin()
 
-	tx.MustExecContext(ctx, "INSERT INTO driver (order_id, driver_id) VALUES ($1, $2)", driver.Name, driver.VehicleModel)
+	tx.MustExecContext(ctx, "INSERT INTO driver (name, vehicle_model) VALUES ($1, $2)", driver.Name, driver.VehicleModel)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)
