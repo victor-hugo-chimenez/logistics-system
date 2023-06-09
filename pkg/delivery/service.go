@@ -24,3 +24,7 @@ func (s *Service) FindById(ctx context.Context, id int) (*Delivery, error) {
 func (s *Service) CreateDelivery(ctx context.Context, delivery *Delivery) error {
 	return s.repository.CreateDelivery(ctx, delivery)
 }
+
+func (s *Service) UpdateById(ctx context.Context, id int) (*Delivery, error) {
+	return nil, nil
+}

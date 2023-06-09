@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"log"
 	"logistics_system/pkg/delivery"
+	"logistics_system/pkg/driver"
 	"net"
 	"net/http"
 )
@@ -40,13 +41,18 @@ func main() {
 	log.Printf("Starting database\n")
 	db := startDB()
 
-	repository := delivery.NewRepository(db)
-	service := delivery.NewDeliveryService(repository)
-	controller := delivery.NewController(service)
+	deliveryRepository := delivery.NewRepository(db)
+	deliveryService := delivery.NewDeliveryService(deliveryRepository)
+	deliveryController := delivery.NewController(deliveryService)
+
+	driverRepository := driver.NewRepository(db)
+	driverService := driver.NewDriverService(driverRepository)
+	driverController := driver.NewController(driverService)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/delivery", controller.HandleDeliveryRequest)
+	mux.HandleFunc("/delivery", deliveryController.HandleDeliveryRequest)
+	mux.HandleFunc("/driver", driverController.HandleDriverRequest)
 
 	serverAddress := "127.0.0.1:3000"
 

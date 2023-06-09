@@ -8,12 +8,6 @@ import (
 )
 
 var Schema = `
-	CREATE TABLE IF NOT EXISTS driver (
-    id INT GENERATED ALWAYS AS IDENTITY,
-	name TEXT,
-    vehicle_model TEXT,
-	PRIMARY KEY (id)
-);
 	CREATE TABLE IF NOT EXISTS delivery (    
     id INT GENERATED ALWAYS AS IDENTITY,
 	order_id INT,
