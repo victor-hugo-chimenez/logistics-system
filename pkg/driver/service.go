@@ -4,6 +4,7 @@ import "context"
 
 type IRepository interface {
 	FindById(ctx context.Context, id int) (*Driver, error)
+	FindAll(ctx context.Context) ([]Driver, error)
 	CreateDriver(ctx context.Context, driver *Driver) error
 }
 
@@ -19,6 +20,10 @@ func NewDriverService(repository IRepository) *Service {
 
 func (s *Service) FindById(ctx context.Context, id int) (*Driver, error) {
 	return s.repository.FindById(ctx, id)
+}
+
+func (s *Service) FindAll(ctx context.Context) ([]Driver, error) {
+	return s.repository.FindAll(ctx)
 }
 
 func (s *Service) CreateDriver(ctx context.Context, driver *Driver) error {

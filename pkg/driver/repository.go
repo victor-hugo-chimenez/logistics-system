@@ -35,6 +35,14 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Driver, error) {
 	return &driver, nil
 }
 
+func (r *Repository) FindAll(ctx context.Context) ([]Driver, error) {
+	var drivers []Driver
+	if err := r.db.Select(&drivers, "SELECT * FROM driver LIMIT 100"); err != nil {
+		return nil, err
+	}
+	return drivers, nil
+}
+
 func (r *Repository) CreateDriver(ctx context.Context, driver *Driver) error {
 	tx := r.db.MustBegin()
 
