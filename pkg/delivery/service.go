@@ -5,6 +5,7 @@ import "context"
 type IRepository interface {
 	FindById(ctx context.Context, id int) (*Delivery, error)
 	CreateDelivery(ctx context.Context, delivery *Delivery) error
+	FindAll(ctx context.Context) ([]Delivery, error)
 }
 
 type Service struct {
@@ -19,6 +20,10 @@ func NewDeliveryService(repository IRepository) *Service {
 
 func (s *Service) FindById(ctx context.Context, id int) (*Delivery, error) {
 	return s.repository.FindById(ctx, id)
+}
+
+func (s *Service) FindAll(ctx context.Context) ([]Delivery, error) {
+	return s.repository.FindAll(ctx)
 }
 
 func (s *Service) CreateDelivery(ctx context.Context, delivery *Delivery) error {

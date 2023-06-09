@@ -11,6 +11,7 @@ import (
 
 type IService interface {
 	FindById(ctx context.Context, id int) (*Delivery, error)
+	FindAll(ctx context.Context) ([]Delivery, error)
 	UpdateById(ctx context.Context, id int) (*Delivery, error)
 	CreateDelivery(ctx context.Context, delivery *Delivery) error
 }
@@ -51,6 +52,17 @@ func (c *Controller) FindById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) FindAll(w http.ResponseWriter, r *http.Request) {
+	deliveries, err := c.service.FindAll(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, "Error getting deliveries")
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+		"result":     deliveries,
+	})
 
 }
 

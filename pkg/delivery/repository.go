@@ -36,6 +36,14 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Delivery, error) {
 	return &delivery, nil
 }
 
+func (r *Repository) FindAll(ctx context.Context) ([]Delivery, error) {
+	var delivery []Delivery
+	if err := r.db.Select(&delivery, "SELECT * FROM delivery LIMIT 100"); err != nil {
+		return nil, err
+	}
+	return delivery, nil
+}
+
 func (r *Repository) CreateDelivery(ctx context.Context, delivery *Delivery) error {
 	tx := r.db.MustBegin()
 
