@@ -46,7 +46,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/delivery", controller.HandleRequest)
+	mux.HandleFunc("/delivery", controller.HandleDeliveryRequest)
 
 	serverAddress := "127.0.0.1:3000"
 
@@ -60,6 +60,7 @@ func main() {
 		},
 	}
 
+	log.Printf("Server listening on %s", serverAddress)
 	err := server.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")

@@ -1,74 +1,132 @@
 package delivery
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 )
 
-type DeliveryService interface {
+type IService interface {
 	FindById(ctx context.Context, id int) (*Delivery, error)
+	UpdateById(ctx context.Context, id int) (*Delivery, error)
+	CreateDelivery(ctx context.Context, delivery *Delivery) error
 }
 
 type Controller struct {
-	service DeliveryService
+	service IService
 }
 
-func NewController(service DeliveryService) *Controller {
+func NewController(service IService) *Controller {
 	return &Controller{
 		service,
 	}
 }
 
-func (c *Controller) FindById(response http.ResponseWriter, request *http.Request) {
-	idParam := request.URL.Query().Get("id")
+func (c *Controller) FindById(w http.ResponseWriter, r *http.Request) {
+	idParam := r.URL.Query().Get("id")
 
 	id, err := strconv.Atoi(idParam)
 
 	if err != nil {
-		buffer := bytes.NewBufferString("Eroooou!").Bytes()
-		response.Write(buffer)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Error parsing delivery ID")
 		return
 	}
 
-	delivery, err := c.service.FindById(request.Context(), id)
+	delivery, err := c.service.FindById(r.Context(), id)
 	if err != nil {
-		buffer := bytes.NewBufferString("Deu ruim!").Bytes()
-		response.Write(buffer)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting delivery by id: %d", id))
 		return
 	}
 
-	json.NewEncoder(response).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"statusCode": 200,
 		"result":     delivery,
 	})
 
 }
 
-func (c Controller) FindAll(response http.ResponseWriter, request *http.Request) {
+func (c *Controller) FindAll(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c Controller) HandleRequest(response http.ResponseWriter, request *http.Request) {
-	switch request.Method {
+func (c *Controller) CreateDelivery(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Could not read body")
+		return
+	}
+
+	var delivery Delivery
+	if err := json.Unmarshal(body, &delivery); err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Could not read body")
+		return
+	}
+
+	err = c.service.CreateDelivery(r.Context(), &delivery)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Could not create delivery: %s\n", err))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+	})
+
+}
+
+func (c *Controller) UpdateById(w http.ResponseWriter, r *http.Request) {
+	idParam := r.URL.Query().Get("id")
+
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Error parsing delivery ID")
+		return
+	}
+
+	delivery, err := c.service.UpdateById(r.Context(), id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting delivery by id: %d", id))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+		"result":     delivery,
+	})
+}
+
+func (c Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
 	case http.MethodGet:
-		if request.URL.Query().Has("id") {
-			c.FindById(response, request)
+		if r.URL.Query().Has("id") {
+			c.FindById(w, r)
 			return
 		} else {
-			c.FindAll(response, request)
+			c.FindAll(w, r)
 			return
 		}
 	case http.MethodPost:
-		fmt.Println("post")
+		c.CreateDelivery(w, r)
+		return
 	case http.MethodPut:
 		fmt.Println("put")
 	case http.MethodDelete:
 		fmt.Println("delete")
 	default:
-		http.Error(response, "Método não suportado", http.StatusMethodNotAllowed)
+		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
 	}
 }

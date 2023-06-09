@@ -42,19 +42,14 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Delivery, error) {
 	return &delivery, nil
 }
 
-func (r *Repository) InsertEntity(ctx context.Context, delivery Delivery) (int64, error) {
+func (r *Repository) CreateDelivery(ctx context.Context, delivery *Delivery) error {
 	tx := r.db.MustBegin()
 
-	result := tx.MustExecContext(ctx, "INSERT INTO delivery (order_id, driver_id) VALUES ($1, $2)", delivery.OrderId, delivery.DriverId)
+	tx.MustExecContext(ctx, "INSERT INTO delivery (order_id, driver_id) VALUES ($1, $2)", delivery.OrderId, delivery.DriverId)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return id, nil
+	return nil
 }

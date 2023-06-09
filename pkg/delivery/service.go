@@ -2,15 +2,16 @@ package delivery
 
 import "context"
 
-type DeliveryRepository interface {
+type IRepository interface {
 	FindById(ctx context.Context, id int) (*Delivery, error)
+	CreateDelivery(ctx context.Context, delivery *Delivery) error
 }
 
 type Service struct {
-	repository DeliveryRepository
+	repository IRepository
 }
 
-func NewDeliveryService(repository DeliveryRepository) *Service {
+func NewDeliveryService(repository IRepository) *Service {
 	return &Service{
 		repository,
 	}
@@ -18,4 +19,8 @@ func NewDeliveryService(repository DeliveryRepository) *Service {
 
 func (s *Service) FindById(ctx context.Context, id int) (*Delivery, error) {
 	return s.repository.FindById(ctx, id)
+}
+
+func (s *Service) CreateDelivery(ctx context.Context, delivery *Delivery) error {
+	return s.repository.CreateDelivery(ctx, delivery)
 }
