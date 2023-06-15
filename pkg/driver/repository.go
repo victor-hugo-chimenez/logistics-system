@@ -54,3 +54,15 @@ func (r *Repository) CreateDriver(ctx context.Context, driver *Driver) error {
 
 	return nil
 }
+
+func (r *Repository) DeleteById(ctx context.Context, id int) error {
+	tx := r.db.MustBegin()
+
+	tx.MustExecContext(ctx, "DELETE FROM driver WHERE id = $1 ", id)
+
+	if err := tx.Commit(); err != nil {
+		log.Fatalln(err)
+	}
+
+	return nil
+}

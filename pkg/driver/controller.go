@@ -120,7 +120,11 @@ func (c *Controller) UpdateById(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c Controller) HandleDriverRequest(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) DeleteById(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (c *Controller) HandleDriverRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if r.URL.Query().Has("id") {

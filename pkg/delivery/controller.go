@@ -121,24 +121,35 @@ func (c *Controller) UpdateById(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if r.URL.Query().Has("id") {
 			c.FindById(w, r)
 			return
-		} else {
-			c.FindAll(w, r)
-			return
 		}
+		c.FindAll(w, r)
+		return
+
 	case http.MethodPost:
 		c.CreateDelivery(w, r)
 		return
+
 	case http.MethodPut:
 		fmt.Println("put")
+
 	case http.MethodDelete:
 		fmt.Println("delete")
+
 	default:
 		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
 	}
+}
+
+func (c *Controller) NewRouter() http.HandlerFunc {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", c.HandleDeliveryRequest)
+
+	return mux.ServeHTTP
 }

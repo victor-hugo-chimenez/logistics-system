@@ -38,7 +38,7 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Delivery, error) {
 
 func (r *Repository) FindAll(ctx context.Context) ([]Delivery, error) {
 	var delivery []Delivery
-	if err := r.db.Select(&delivery, "SELECT * FROM delivery LIMIT 100"); err != nil {
+	if err := r.db.Select(&delivery, "SELECT * FROM delivery WHERE id >= $1 ORDER BY id LIMIT 100", 0); err != nil {
 		return nil, err
 	}
 	return delivery, nil

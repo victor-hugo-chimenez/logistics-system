@@ -51,7 +51,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/delivery", deliveryController.HandleDeliveryRequest)
+	mux.HandleFunc("/delivery", deliveryController.NewRouter())
 	mux.HandleFunc("/driver", driverController.HandleDriverRequest)
 
 	serverAddress := "127.0.0.1:3000"

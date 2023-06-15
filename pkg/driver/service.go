@@ -6,6 +6,7 @@ type IRepository interface {
 	FindById(ctx context.Context, id int) (*Driver, error)
 	FindAll(ctx context.Context) ([]Driver, error)
 	CreateDriver(ctx context.Context, driver *Driver) error
+	DeleteById(ctx context.Context, id int) error
 }
 
 type Service struct {
@@ -32,4 +33,8 @@ func (s *Service) CreateDriver(ctx context.Context, driver *Driver) error {
 
 func (s *Service) UpdateById(ctx context.Context, id int) (*Driver, error) {
 	return nil, nil
+}
+
+func (s *Service) DeleteById(ctx context.Context, id int) error {
+	return s.repository.DeleteById(ctx, id)
 }
