@@ -98,7 +98,7 @@ func (c *Controller) CreateDelivery(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *Controller) UpdateById(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) UpdateDelivery(w http.ResponseWriter, r *http.Request) {
 
 	var delivery *Delivery
 	err := json.NewDecoder(r.Body).Decode(&delivery)
@@ -159,7 +159,7 @@ func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Reques
 		return
 
 	case http.MethodPut:
-		fmt.Println("put")
+		c.UpdateDelivery(w, r)
 
 	case http.MethodDelete:
 		c.DeleteById(w, r)
