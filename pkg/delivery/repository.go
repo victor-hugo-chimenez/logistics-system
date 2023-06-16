@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
@@ -76,7 +77,8 @@ func (r *Repository) UpdateDelivery(ctx context.Context, delivery *Delivery) (*D
 func (r *Repository) DeleteById(ctx context.Context, id int) error {
 	tx := r.db.MustBegin()
 
-	tx.MustExecContext(ctx, "DELETE FROM driver WHERE id = $1 ", id)
+	fmt.Println(id)
+	tx.MustExecContext(ctx, "DELETE FROM delivery WHERE id = $1 ", id)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)
