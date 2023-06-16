@@ -14,6 +14,7 @@ type IService interface {
 	FindAll(ctx context.Context) ([]Driver, error)
 	UpdateById(ctx context.Context, id int) (*Driver, error)
 	CreateDriver(ctx context.Context, driver *Driver) error
+	DeleteById(ctx context.Context, id int) error
 }
 
 type Controller struct {
@@ -121,7 +122,25 @@ func (c *Controller) UpdateById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) DeleteById(w http.ResponseWriter, r *http.Request) {
+	idParam := r.URL.Query().Get("id")
 
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Error parsing driver ID")
+		return
+	}
+
+	if err := c.service.DeleteById(r.Context(), id); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting driver by id: %d", id))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+	})
 }
 
 func (c *Controller) HandleDriverRequest(w http.ResponseWriter, r *http.Request) {
@@ -130,17 +149,16 @@ func (c *Controller) HandleDriverRequest(w http.ResponseWriter, r *http.Request)
 		if r.URL.Query().Has("id") {
 			c.FindById(w, r)
 			return
-		} else {
-			c.FindAll(w, r)
-			return
 		}
+		c.FindAll(w, r)
+		return
 	case http.MethodPost:
 		c.CreateDriver(w, r)
 		return
 	case http.MethodPut:
 		fmt.Println("put")
 	case http.MethodDelete:
-		fmt.Println("delete")
+		c.DeleteById(w, r)
 	default:
 		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
 	}

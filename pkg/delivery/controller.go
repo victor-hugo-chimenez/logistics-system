@@ -12,8 +12,9 @@ import (
 type IService interface {
 	FindById(ctx context.Context, id int) (*Delivery, error)
 	FindAll(ctx context.Context) ([]Delivery, error)
-	UpdateById(ctx context.Context, id int) (*Delivery, error)
+	UpdateDelivery(ctx context.Context, delivery *Delivery) (*Delivery, error)
 	CreateDelivery(ctx context.Context, delivery *Delivery) error
+	DeleteById(ctx context.Context, id int) error
 }
 
 type Controller struct {
@@ -98,26 +99,48 @@ func (c *Controller) CreateDelivery(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) UpdateById(w http.ResponseWriter, r *http.Request) {
+
+	var delivery *Delivery
+	err := json.NewDecoder(r.Body).Decode(&delivery)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Error parsing delivery")
+		return
+	}
+
+	updatedDelivery, err := c.service.UpdateDelivery(r.Context(), delivery)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Error updating delivery by id: %d", delivery.ID))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+		"result":     updatedDelivery,
+	})
+}
+
+func (c *Controller) DeleteById(w http.ResponseWriter, r *http.Request) {
 	idParam := r.URL.Query().Get("id")
 
 	id, err := strconv.Atoi(idParam)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = io.WriteString(w, "Error parsing delivery ID")
+		_, _ = io.WriteString(w, "Error parsing driver ID")
 		return
 	}
 
-	delivery, err := c.service.UpdateById(r.Context(), id)
-	if err != nil {
+	if err := c.service.DeleteById(r.Context(), id); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = io.WriteString(w, fmt.Sprintf("Error getting delivery by id: %d", id))
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting driver by id: %d", id))
 		return
 	}
 
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"statusCode": 200,
-		"result":     delivery,
 	})
 }
 
@@ -139,7 +162,8 @@ func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Reques
 		fmt.Println("put")
 
 	case http.MethodDelete:
-		fmt.Println("delete")
+		c.DeleteById(w, r)
+		return
 
 	default:
 		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)

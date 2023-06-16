@@ -55,3 +55,32 @@ func (r *Repository) CreateDelivery(ctx context.Context, delivery *Delivery) err
 
 	return nil
 }
+
+func (r *Repository) UpdateDelivery(ctx context.Context, delivery *Delivery) (*Delivery, error) {
+	tx := r.db.MustBegin()
+
+	tx.MustExecContext(ctx, "UPDATE delivery SET order_id = $2, driver_id = $3 WHERE id = $1", delivery.ID, delivery.OrderId, delivery.DriverId)
+
+	if err := tx.Commit(); err != nil {
+		log.Fatalln(err)
+	}
+
+	var updatedDelivery Delivery
+	if err := r.db.Get(&updatedDelivery, "SELECT * FROM delivery WHERE id=$1", delivery.ID); err != nil {
+		return nil, err
+	}
+
+	return &updatedDelivery, nil
+}
+
+func (r *Repository) DeleteById(ctx context.Context, id int) error {
+	tx := r.db.MustBegin()
+
+	tx.MustExecContext(ctx, "DELETE FROM driver WHERE id = $1 ", id)
+
+	if err := tx.Commit(); err != nil {
+		log.Fatalln(err)
+	}
+
+	return nil
+}
