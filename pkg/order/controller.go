@@ -1,4 +1,4 @@
-package delivery
+package order
 
 import (
 	"context"
@@ -10,10 +10,10 @@ import (
 )
 
 type IService interface {
-	FindById(ctx context.Context, id int) (*Delivery, error)
-	FindAll(ctx context.Context) ([]Delivery, error)
-	UpdateDelivery(ctx context.Context, delivery *Delivery) (*Delivery, error)
-	CreateDelivery(ctx context.Context, delivery *Delivery) error
+	FindById(ctx context.Context, id int) (*Order, error)
+	FindAll(ctx context.Context) ([]Order, error)
+	UpdateOrder(ctx context.Context, order *Order) (*Order, error)
+	CreateOrder(ctx context.Context, order *Order) error
 	DeleteById(ctx context.Context, id int) error
 }
 
@@ -34,20 +34,20 @@ func (c *Controller) FindById(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = io.WriteString(w, "Error parsing delivery ID")
+		_, _ = io.WriteString(w, "Error parsing order ID")
 		return
 	}
 
-	delivery, err := c.service.FindById(r.Context(), id)
+	order, err := c.service.FindById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = io.WriteString(w, fmt.Sprintf("Error getting delivery by id: %d", id))
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting order by id: %d", id))
 		return
 	}
 
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"statusCode": 200,
-		"result":     delivery,
+		"result":     order,
 	})
 
 }
@@ -56,7 +56,7 @@ func (c *Controller) FindAll(w http.ResponseWriter, r *http.Request) {
 	deliveries, err := c.service.FindAll(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = io.WriteString(w, "Error getting deliveries")
+		_, _ = io.WriteString(w, "Error getting orders")
 		return
 	}
 
@@ -67,7 +67,7 @@ func (c *Controller) FindAll(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *Controller) CreateDelivery(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -77,18 +77,18 @@ func (c *Controller) CreateDelivery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var delivery Delivery
-	if err := json.Unmarshal(body, &delivery); err != nil {
+	var order Order
+	if err := json.Unmarshal(body, &order); err != nil {
 		fmt.Printf("could not read body: %s\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = io.WriteString(w, "Could not read body")
 		return
 	}
 
-	err = c.service.CreateDelivery(r.Context(), &delivery)
+	err = c.service.CreateOrder(r.Context(), &order)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = io.WriteString(w, fmt.Sprintf("Could not create delivery: %s\n", err))
+		_, _ = io.WriteString(w, fmt.Sprintf("Could not create order: %s\n", err))
 		return
 	}
 
@@ -98,27 +98,27 @@ func (c *Controller) CreateDelivery(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (c *Controller) UpdateDelivery(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) UpdateOrder(w http.ResponseWriter, r *http.Request) {
 
-	var delivery *Delivery
-	err := json.NewDecoder(r.Body).Decode(&delivery)
+	var order *Order
+	err := json.NewDecoder(r.Body).Decode(&order)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = io.WriteString(w, "Error parsing delivery")
+		_, _ = io.WriteString(w, "Error parsing order")
 		return
 	}
 
-	updatedDelivery, err := c.service.UpdateDelivery(r.Context(), delivery)
+	updatedOrder, err := c.service.UpdateOrder(r.Context(), order)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = io.WriteString(w, fmt.Sprintf("Error updating delivery by id: %d", delivery.ID))
+		_, _ = io.WriteString(w, fmt.Sprintf("Error updating order by id: %d", order.ID))
 		return
 	}
 
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"statusCode": 200,
-		"result":     updatedDelivery,
+		"result":     updatedOrder,
 	})
 }
 
@@ -144,7 +144,7 @@ func (c *Controller) DeleteById(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) HandleOrderRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if r.URL.Query().Has("id") {
@@ -155,11 +155,11 @@ func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Reques
 		return
 
 	case http.MethodPost:
-		c.CreateDelivery(w, r)
+		c.CreateOrder(w, r)
 		return
 
 	case http.MethodPut:
-		c.UpdateDelivery(w, r)
+		c.UpdateOrder(w, r)
 
 	case http.MethodDelete:
 		c.DeleteById(w, r)
@@ -173,7 +173,7 @@ func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Reques
 func (c *Controller) NewRouter() http.HandlerFunc {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", c.HandleDeliveryRequest)
+	mux.HandleFunc("/", c.HandleOrderRequest)
 
 	return mux.ServeHTTP
 }
