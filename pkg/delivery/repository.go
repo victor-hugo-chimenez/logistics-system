@@ -39,9 +39,24 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Delivery, error) {
 
 func (r *Repository) FindAll(ctx context.Context) ([]Delivery, error) {
 	var delivery []Delivery
-	if err := r.db.Select(&delivery, "SELECT * FROM delivery WHERE id >= $1 ORDER BY id LIMIT 100", 0); err != nil {
-		return nil, err
+	var limit int
+	if err := r.db.Get(&limit, "SELECT COUNT(id) FROM delivery"); err != nil {
+		limit = 12
 	}
+	page := 4
+	pageSize := limit / page
+	fmt.Printf("Limit %d, Page %d, PageSize %d\n", limit, page, pageSize)
+
+	for lastReadId := 0; lastReadId < limit; lastReadId += pageSize {
+		var partialDeliveryResult []Delivery
+		if err := r.db.Select(&partialDeliveryResult, "SELECT * FROM delivery WHERE id BETWEEN $1 AND $2 ORDER BY id DESC", lastReadId, lastReadId+pageSize); err != nil {
+			return nil, err
+		}
+		fmt.Printf("Iteration %d", lastReadId)
+		fmt.Println(partialDeliveryResult)
+		delivery = append(delivery, partialDeliveryResult...)
+	}
+
 	return delivery, nil
 }
 
