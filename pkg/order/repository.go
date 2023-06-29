@@ -13,7 +13,12 @@ var Schema = `
  	amount INT,
  	description VARCHAR(255),
     delivery_id INT,
+	user_id INT,
+	created_at TIMESTAMP NOT NULL DEFAULT NOW(),    
+	updated_at TIMESTAMP NOT NULL DEFAULT NOW(),   
+	    
     PRIMARY KEY (id),
+	CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id),
 	CONSTRAINT fk_delivery_id FOREIGN KEY (delivery_id) REFERENCES delivery(id)
 );`
 
