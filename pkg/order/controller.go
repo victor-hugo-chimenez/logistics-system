@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	order_item "logistics_system/pkg/order/item"
 	"net/http"
 	"strconv"
 )
 
-type IService interface {
+type IOrderService interface {
 	FindById(ctx context.Context, id int) (*Order, error)
 	FindAll(ctx context.Context) ([]Order, error)
 	UpdateOrder(ctx context.Context, order *Order) (*Order, error)
@@ -17,13 +18,19 @@ type IService interface {
 	DeleteById(ctx context.Context, id int) error
 }
 
-type Controller struct {
-	service IService
+type IOrderItemService interface {
+	FindItemByOrderId(ctx context.Context, id int) ([]order_item.OrderItem, error)
 }
 
-func NewController(service IService) *Controller {
+type Controller struct {
+	orderService     IOrderService
+	orderItemService IOrderItemService
+}
+
+func NewController(orderService IOrderService, orderItemService IOrderItemService) *Controller {
 	return &Controller{
-		service,
+		orderService,
+		orderItemService,
 	}
 }
 
@@ -38,7 +45,7 @@ func (c *Controller) FindById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := c.service.FindById(r.Context(), id)
+	order, err := c.orderService.FindById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Error getting order by id: %d", id))
@@ -52,8 +59,38 @@ func (c *Controller) FindById(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (c *Controller) FindItemByOrderId(w http.ResponseWriter, r *http.Request) {
+	idParam := r.URL.Query().Get("id")
+
+	if idParam == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Order Id not provided")
+		return
+	}
+
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Error parsing order ID")
+		return
+	}
+
+	order, err := c.orderItemService.FindItemByOrderId(r.Context(), id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting order by id: %d", id))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+		"result":     order,
+	})
+}
+
 func (c *Controller) FindAll(w http.ResponseWriter, r *http.Request) {
-	deliveries, err := c.service.FindAll(r.Context())
+	deliveries, err := c.orderService.FindAll(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, "Error getting orders")
@@ -85,7 +122,7 @@ func (c *Controller) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.service.CreateOrder(r.Context(), &order)
+	err = c.orderService.CreateOrder(r.Context(), &order)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Could not create order: %s\n", err))
@@ -109,7 +146,7 @@ func (c *Controller) UpdateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedOrder, err := c.service.UpdateOrder(r.Context(), order)
+	updatedOrder, err := c.orderService.UpdateOrder(r.Context(), order)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Error updating order by id: %d", order.ID))
@@ -133,7 +170,7 @@ func (c *Controller) DeleteById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := c.service.DeleteById(r.Context(), id); err != nil {
+	if err := c.orderService.DeleteById(r.Context(), id); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Error getting driver by id: %d", id))
 		return
@@ -170,10 +207,24 @@ func (c *Controller) HandleOrderRequest(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (c *Controller) NewRouter() http.HandlerFunc {
-	mux := http.NewServeMux()
+func (c *Controller) HandleOrderItemRequest(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		c.FindItemByOrderId(w, r)
+		return
 
-	mux.HandleFunc("/", c.HandleOrderRequest)
+	case http.MethodPost:
+		c.CreateOrder(w, r)
+		return
 
-	return mux.ServeHTTP
+	case http.MethodPut:
+		c.UpdateOrder(w, r)
+
+	case http.MethodDelete:
+		c.DeleteById(w, r)
+		return
+
+	default:
+		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
+	}
 }

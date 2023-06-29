@@ -32,7 +32,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 
 func (r *Repository) FindById(ctx context.Context, id int) (*Order, error) {
 	var order Order
-	if err := r.db.Get(&order, "SELECT * FROM order WHERE id=$1", id); err != nil {
+	if err := r.db.Get(&order, "SELECT * FROM orders WHERE id=$1", id); err != nil {
 		return nil, err
 	}
 	return &order, nil
@@ -41,16 +41,22 @@ func (r *Repository) FindById(ctx context.Context, id int) (*Order, error) {
 func (r *Repository) FindAll(ctx context.Context) ([]Order, error) {
 	var order []Order
 	var limit int
-	if err := r.db.Get(&limit, "SELECT COUNT(id) FROM order"); err != nil {
+	if err := r.db.Get(&limit, "SELECT COUNT(id) FROM orders"); err != nil {
 		limit = 12
 	}
 	page := 4
 	pageSize := limit / page
+
+	if pageSize == 0 {
+		pageSize = 1
+	}
+
 	fmt.Printf("Limit %d, Page %d, PageSize %d\n", limit, page, pageSize)
 
 	for lastReadId := 0; lastReadId < limit; lastReadId += pageSize {
 		var partialOrderResult []Order
-		if err := r.db.Select(&partialOrderResult, "SELECT * FROM order WHERE id BETWEEN $1 AND $2 ORDER BY id DESC", lastReadId, lastReadId+pageSize); err != nil {
+		if err := r.db.Select(&partialOrderResult, "SELECT * FROM orders WHERE id BETWEEN $1 AND $2 ORDER BY id DESC", lastReadId, lastReadId+pageSize); err != nil {
+			fmt.Printf("Error getting orders %s", err)
 			return nil, err
 		}
 		fmt.Printf("Iteration %d", lastReadId)
@@ -64,7 +70,7 @@ func (r *Repository) FindAll(ctx context.Context) ([]Order, error) {
 func (r *Repository) CreateOrder(ctx context.Context, order *Order) error {
 	tx := r.db.MustBegin()
 
-	tx.MustExecContext(ctx, "INSERT INTO order (amount, description, delivery_id) VALUES ($1, $2, $3)", order.Amount, order.Description, order.DeliveryId)
+	tx.MustExecContext(ctx, "INSERT INTO orders (amount, description, user_id, created_at, updated_at) VALUES ($1, $2, $3)", order.Amount, order.Description, order.UserId, order.CreatedAt, order.UpdatedAt)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)
@@ -76,14 +82,14 @@ func (r *Repository) CreateOrder(ctx context.Context, order *Order) error {
 func (r *Repository) UpdateOrder(ctx context.Context, order *Order) (*Order, error) {
 	tx := r.db.MustBegin()
 
-	tx.MustExecContext(ctx, "UPDATE order SET amount = $2, description = $3, delivery_id = $4 WHERE id = $1", order.ID, order.Amount, order.Description, order.DeliveryId)
+	tx.MustExecContext(ctx, "UPDATE orders SET amount = $2, description = $3, user_id = $4, updated_at = NOW() WHERE id = $1", order.Amount, order.Description, order.UserId)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)
 	}
 
 	var updatedOrder Order
-	if err := r.db.Get(&updatedOrder, "SELECT * FROM order WHERE id=$1", order.ID); err != nil {
+	if err := r.db.Get(&updatedOrder, "SELECT * FROM orders WHERE id=$1", order.ID); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +100,7 @@ func (r *Repository) DeleteById(ctx context.Context, id int) error {
 	tx := r.db.MustBegin()
 
 	fmt.Println(id)
-	tx.MustExecContext(ctx, "DELETE FROM order WHERE id = $1 ", id)
+	tx.MustExecContext(ctx, "DELETE FROM orders WHERE id = $1 ", id)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)

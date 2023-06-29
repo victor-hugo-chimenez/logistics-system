@@ -169,11 +169,3 @@ func (c *Controller) HandleDeliveryRequest(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
 	}
 }
-
-func (c *Controller) NewRouter() http.HandlerFunc {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/", c.HandleDeliveryRequest)
-
-	return mux.ServeHTTP
-}

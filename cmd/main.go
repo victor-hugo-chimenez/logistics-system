@@ -38,17 +38,11 @@ func startDB() *sqlx.DB {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("Exec user")
 	db.MustExec(user.Schema)
-	fmt.Println("Exec order")
 	db.MustExec(order.Schema)
-	fmt.Println("Exec item")
 	db.MustExec(order_item.Schema)
-	fmt.Println("Exec status")
 	db.MustExec(order_status.Schema)
-	fmt.Println("Exec prduct")
 	db.MustExec(products.Schema)
-	fmt.Println("Exec driver")
 	db.MustExec(driver.Schema)
 	db.MustExec(delivery.Schema)
 	return db
@@ -66,10 +60,21 @@ func main() {
 	driverService := driver.NewDriverService(driverRepository)
 	driverController := driver.NewController(driverService)
 
+	orderItemRepository := order_item.NewRepository(db)
+	orderItemService := order_item.NewOrderService(orderItemRepository)
+
+	orderRepository := order.NewRepository(db)
+	orderService := order.NewOrderService(orderRepository)
+	orderController := order.NewController(orderService, orderItemService)
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/delivery", deliveryController.NewRouter())
-	mux.HandleFunc("/driver", driverController.HandleDriverRequest)
+	mux.HandleFunc("/delivery", middleware(deliveryController.HandleDeliveryRequest))
+
+	mux.HandleFunc("/driver", middleware(driverController.HandleDriverRequest))
+
+	mux.HandleFunc("/order/item", middleware(orderController.HandleOrderItemRequest))
+	mux.HandleFunc("/order", middleware(orderController.HandleOrderRequest))
 
 	serverAddress := "127.0.0.1:3000"
 
@@ -89,5 +94,12 @@ func main() {
 		fmt.Printf("server closed\n")
 	} else if err != nil {
 		fmt.Printf("error listening for server: %s\n", err)
+	}
+}
+
+func middleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
 	}
 }

@@ -12,7 +12,7 @@ var Schema = `
     id INT GENERATED ALWAYS AS IDENTITY,
 	name VARCHAR(255),
     vehicle_model VARCHAR(255),
-    vehicle_license_plate VARCHAR(6),
+    vehicle_license_plate VARCHAR(7),
 	license_number INT,
 	    
 	PRIMARY KEY (id)
