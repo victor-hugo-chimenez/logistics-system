@@ -8,23 +8,28 @@ import (
 	"log"
 	"logistics_system/pkg/delivery"
 	"logistics_system/pkg/driver"
+	"logistics_system/pkg/order"
+	"logistics_system/pkg/order/item"
+	order_status "logistics_system/pkg/order/status"
+	"logistics_system/pkg/products"
+	"logistics_system/pkg/user"
 	"net"
 	"net/http"
 )
 
 const (
-	host          = "localhost"
-	port          = 5432
-	user          = "postgres"
-	password      = "postgres"
-	dbname        = "postgres"
+	dbHost        = "localhost"
+	dbPort        = 5432
+	dbUser        = "postgres"
+	dbPassword    = "postgres"
+	dbName        = "postgres"
 	keyServerAddr = "serverAddr"
 )
 
 func startDB() *sqlx.DB {
 	pgInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		dbHost, dbPort, dbUser, dbPassword, dbName)
 
 	// this Pings the database trying to connect
 	// use sqlx.Open() for sql.Open() semantics
@@ -33,6 +38,18 @@ func startDB() *sqlx.DB {
 		log.Fatalln(err)
 	}
 
+	fmt.Println("Exec user")
+	db.MustExec(user.Schema)
+	fmt.Println("Exec order")
+	db.MustExec(order.Schema)
+	fmt.Println("Exec item")
+	db.MustExec(order_item.Schema)
+	fmt.Println("Exec status")
+	db.MustExec(order_status.Schema)
+	fmt.Println("Exec prduct")
+	db.MustExec(products.Schema)
+	fmt.Println("Exec driver")
+	db.MustExec(driver.Schema)
 	db.MustExec(delivery.Schema)
 	return db
 }

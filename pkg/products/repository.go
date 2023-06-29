@@ -11,7 +11,7 @@ var Schema = `
 	discount_percent INT,    
     order_item_id INT,
     PRIMARY KEY (id),
-	CONSTRAINT fk_order_item_id FOREIGN KEY (order_item) REFERENCES order_item(id)
+	CONSTRAINT fk_order_item_id FOREIGN KEY (order_item_id) REFERENCES order_items(id)
 );`
 
 type Repository struct {

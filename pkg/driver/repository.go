@@ -13,7 +13,7 @@ var Schema = `
 	name VARCHAR(255),
     vehicle_model VARCHAR(255),
     vehicle_license_plate VARCHAR(6),
-	license_number INT
+	license_number INT,
 	    
 	PRIMARY KEY (id)
 );
