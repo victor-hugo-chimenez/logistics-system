@@ -10,8 +10,11 @@ import (
 var Schema = `
 	CREATE TABLE IF NOT EXISTS driver (
     id INT GENERATED ALWAYS AS IDENTITY,
-	name TEXT,
-    vehicle_model TEXT,
+	name VARCHAR(255),
+    vehicle_model VARCHAR(255),
+    vehicle_license_plate VARCHAR(6),
+	license_number INT
+	    
 	PRIMARY KEY (id)
 );
 
