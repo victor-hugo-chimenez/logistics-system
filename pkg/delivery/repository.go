@@ -13,7 +13,11 @@ var Schema = `
     id INT GENERATED ALWAYS AS IDENTITY,
 	order_id INT,
     driver_id INT,
+    status VARCHAR(255),
+	start_time TIMESTAMP NOT NULL DEFAULT NOW(),
+	end_time TIMESTAMP,    
     PRIMARY KEY (id),
+	CONSTRAINT fk_order_id FOREIGN KEY (order_id) REFERENCES orders(id),    
 	CONSTRAINT fk_driver_id FOREIGN KEY (driver_id) REFERENCES driver(id)
 );
 
