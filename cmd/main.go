@@ -63,9 +63,12 @@ func main() {
 	orderItemRepository := order_item.NewRepository(db)
 	orderItemService := order_item.NewOrderService(orderItemRepository)
 
+	orderStatusRepository := order_status.NewRepository(db)
+	orderStatusService := order_status.NewOrderService(orderStatusRepository)
+
 	orderRepository := order.NewRepository(db)
 	orderService := order.NewOrderService(orderRepository)
-	orderController := order.NewController(orderService, orderItemService)
+	orderController := order.NewController(orderService, orderItemService, orderStatusService)
 
 	mux := http.NewServeMux()
 
@@ -74,6 +77,7 @@ func main() {
 	mux.HandleFunc("/driver", middleware(driverController.HandleDriverRequest))
 
 	mux.HandleFunc("/order/item", middleware(orderController.HandleOrderItemRequest))
+	mux.HandleFunc("/order/status", middleware(orderController.HandleOrderStatusRequest))
 	mux.HandleFunc("/order", middleware(orderController.HandleOrderRequest))
 
 	serverAddress := "127.0.0.1:3000"

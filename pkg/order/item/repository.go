@@ -3,6 +3,7 @@ package order_item
 import (
 	"context"
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 var Schema = `
@@ -32,4 +33,16 @@ func (r *Repository) FindItemByOrderId(ctx context.Context, id int) ([]OrderItem
 		return nil, err
 	}
 	return orderItems, nil
+}
+
+func (r *Repository) CreateOrderItem(ctx context.Context, item *OrderItem) error {
+	tx := r.db.MustBegin()
+
+	tx.MustExecContext(ctx, "INSERT INTO order_items (order_id, item_name, quantity) VALUES ($1, $2, $3)", item.OrderId, item.ItemName, item.Quantity)
+
+	if err := tx.Commit(); err != nil {
+		log.Fatalln(err)
+	}
+
+	return nil
 }

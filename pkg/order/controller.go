@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	order_item "logistics_system/pkg/order/item"
+	order_status "logistics_system/pkg/order/status"
 	"net/http"
 	"strconv"
 )
@@ -20,17 +21,25 @@ type IOrderService interface {
 
 type IOrderItemService interface {
 	FindItemByOrderId(ctx context.Context, id int) ([]order_item.OrderItem, error)
+	CreateOrderItem(ctx context.Context, item *order_item.OrderItem) error
+}
+
+type IOrderStatusService interface {
+	FindStatusByOrderId(ctx context.Context, id int) ([]order_status.OrderStatus, error)
+	CreateOrderStatus(ctx context.Context, status *order_status.OrderStatus) error
 }
 
 type Controller struct {
-	orderService     IOrderService
-	orderItemService IOrderItemService
+	orderService       IOrderService
+	orderItemService   IOrderItemService
+	orderStatusService IOrderStatusService
 }
 
-func NewController(orderService IOrderService, orderItemService IOrderItemService) *Controller {
+func NewController(orderService IOrderService, orderItemService IOrderItemService, orderStatusService IOrderStatusService) *Controller {
 	return &Controller{
 		orderService,
 		orderItemService,
+		orderStatusService,
 	}
 }
 
@@ -77,6 +86,37 @@ func (c *Controller) FindItemByOrderId(w http.ResponseWriter, r *http.Request) {
 	}
 
 	order, err := c.orderItemService.FindItemByOrderId(r.Context(), id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Error getting order by id: %d", id))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+		"result":     order,
+	})
+}
+
+func (c *Controller) FindStatusByOrderId(w http.ResponseWriter, r *http.Request) {
+	idParam := r.URL.Query().Get("id")
+
+	if idParam == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Order Id not provided")
+		return
+	}
+
+	id, err := strconv.Atoi(idParam)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Error parsing order ID")
+		return
+	}
+
+	order, err := c.orderStatusService.FindStatusByOrderId(r.Context(), id)
+	fmt.Println(err)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Error getting order by id: %d", id))
@@ -159,6 +199,68 @@ func (c *Controller) UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (c *Controller) CreateOrderItem(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Could not read body")
+		return
+	}
+
+	var orderItem order_item.OrderItem
+	if err := json.Unmarshal(body, &orderItem); err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Could not read body")
+		return
+	}
+
+	err = c.orderItemService.CreateOrderItem(r.Context(), &orderItem)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Could not create order: %s\n", err))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+	})
+
+}
+
+func (c *Controller) CreateOrderStatus(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Could not read body")
+		return
+	}
+
+	var orderStatus order_status.OrderStatus
+	if err := json.Unmarshal(body, &orderStatus); err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, "Could not read body")
+		return
+	}
+
+	err = c.orderStatusService.CreateOrderStatus(r.Context(), &orderStatus)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, fmt.Sprintf("Could not create order: %s\n", err))
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"statusCode": 200,
+	})
+
+}
+
 func (c *Controller) DeleteById(w http.ResponseWriter, r *http.Request) {
 	idParam := r.URL.Query().Get("id")
 
@@ -214,14 +316,22 @@ func (c *Controller) HandleOrderItemRequest(w http.ResponseWriter, r *http.Reque
 		return
 
 	case http.MethodPost:
-		c.CreateOrder(w, r)
+		c.CreateOrderItem(w, r)
 		return
 
-	case http.MethodPut:
-		c.UpdateOrder(w, r)
+	default:
+		http.Error(w, "Método não suportado", http.StatusMethodNotAllowed)
+	}
+}
 
-	case http.MethodDelete:
-		c.DeleteById(w, r)
+func (c *Controller) HandleOrderStatusRequest(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		c.FindStatusByOrderId(w, r)
+		return
+
+	case http.MethodPost:
+		c.CreateOrderStatus(w, r)
 		return
 
 	default:
