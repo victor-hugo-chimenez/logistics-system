@@ -54,6 +54,7 @@ func (c *Controller) FindById(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) FindAll(w http.ResponseWriter, r *http.Request) {
 	deliveries, err := c.service.FindAll(r.Context())
+	fmt.Println(err)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, "Error getting deliveries")

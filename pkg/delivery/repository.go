@@ -49,6 +49,11 @@ func (r *Repository) FindAll(ctx context.Context) ([]Delivery, error) {
 	}
 	page := 4
 	pageSize := limit / page
+
+	if pageSize == 0 {
+		pageSize = 1
+	}
+
 	fmt.Printf("Limit %d, Page %d, PageSize %d\n", limit, page, pageSize)
 
 	for lastReadId := 0; lastReadId < limit; lastReadId += pageSize {
@@ -57,6 +62,7 @@ func (r *Repository) FindAll(ctx context.Context) ([]Delivery, error) {
 			return nil, err
 		}
 		fmt.Printf("Iteration %d", lastReadId)
+		fmt.Printf("Limit %d, Page %d, PageSize %d\n", limit, page, pageSize)
 		fmt.Println(partialDeliveryResult)
 		delivery = append(delivery, partialDeliveryResult...)
 	}
