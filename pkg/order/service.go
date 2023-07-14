@@ -2,7 +2,7 @@ package order
 
 import "context"
 
-type IRepository interface {
+type BaseRepository interface {
 	FindById(ctx context.Context, id int) (*Order, error)
 	CreateOrder(ctx context.Context, order *Order) error
 	FindAll(ctx context.Context) ([]Order, error)
@@ -11,10 +11,10 @@ type IRepository interface {
 }
 
 type Service struct {
-	repository IRepository
+	repository BaseRepository
 }
 
-func NewOrderService(repository IRepository) *Service {
+func NewOrderService(repository BaseRepository) *Service {
 	return &Service{
 		repository,
 	}

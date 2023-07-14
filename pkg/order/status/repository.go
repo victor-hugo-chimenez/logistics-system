@@ -2,20 +2,30 @@ package order_status
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
-	"log"
 )
 
 var Schema = `
-	CREATE TABLE IF NOT EXISTS order_status (
-    id INT GENERATED ALWAYS AS IDENTITY,
-	order_id INT,
-	status VARCHAR(255),
-	last_update_date TIMESTAMP NOT NULL DEFAULT NOW(),    
-	
-	PRIMARY KEY (id),
-	CONSTRAINT fk_order_id FOREIGN KEY (order_id) REFERENCES orders(id)
-);
+	CREATE TABLE IF NOT EXISTS order_status_history (
+	    version INT GENERATED ALWAYS AS IDENTITY,
+	    order_id INT REFERENCES orders(id),
+	    event jsonb,
+	    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+	    
+	    PRIMARY KEY (order_id, version)
+	);
+
+	CREATE TABLE IF NOT EXISTS order_status_checkpoint (
+	    version INT,
+	    order_id INT,
+	    event jsonb,
+	    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+	    
+	    PRIMARY KEY (order_id, version),
+	    CONSTRAINT fk_order_status_version FOREIGN KEY (version) REFERENCES order_status_history(version),
+	    CONSTRAINT fk_order_id FOREIGN KEY (order_id) REFERENCES orders(id)
+	)
 `
 
 type Repository struct {
@@ -36,14 +46,20 @@ func (r *Repository) FindStatusByOrderId(ctx context.Context, id int) ([]OrderSt
 	return orderStatus, nil
 }
 
-func (r *Repository) CreateOrderStatus(ctx context.Context, status *OrderStatus) error {
+func (r *Repository) UpdateOrderStatus(ctx context.Context, status *OrderStatus) error {
 	tx := r.db.MustBegin()
 
-	tx.MustExecContext(ctx, "INSERT INTO order_status (order_id, status) VALUES ($1, $2)", status.OrderId, status.Status)
+	if _, err := tx.ExecContext(ctx, "INSERT INTO order_status_history (order_id, status) VALUES ($1, $2)", status.OrderId, status.Status); err != nil {
+		return err
+	}
 
 	if err := tx.Commit(); err != nil {
-		log.Fatalln(err)
+		return fmt.Errorf("failed to update order status %s", err)
 	}
 
 	return nil
 }
+
+// TODO Append no log: Todo comando recebido de update order deve guardar o evento
+// event -> command
+// Checkpoint com CronJob ou com "múltiplo de 10"

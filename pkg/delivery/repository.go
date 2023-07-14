@@ -73,7 +73,7 @@ func (r *Repository) FindAll(ctx context.Context) ([]Delivery, error) {
 func (r *Repository) CreateDelivery(ctx context.Context, delivery *Delivery) error {
 	tx := r.db.MustBegin()
 
-	tx.MustExecContext(ctx, "INSERT INTO delivery (order_id, driver_id, status, start_time, end_time) VALUES ($1, $2)", delivery.OrderId, delivery.DriverId, delivery.Status, delivery.StartTime, delivery.EndTime)
+	tx.MustExecContext(ctx, "INSERT INTO delivery (order_id, driver_id, status, start_time, end_time) VALUES ($1, $2, $3, $4, $5)", delivery.OrderId, delivery.DriverId, delivery.Status, delivery.StartTime, delivery.EndTime)
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalln(err)

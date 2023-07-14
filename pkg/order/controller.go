@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-type IOrderService interface {
+type BaseService interface {
 	FindById(ctx context.Context, id int) (*Order, error)
 	FindAll(ctx context.Context) ([]Order, error)
 	UpdateOrder(ctx context.Context, order *Order) (*Order, error)
@@ -19,23 +19,23 @@ type IOrderService interface {
 	DeleteById(ctx context.Context, id int) error
 }
 
-type IOrderItemService interface {
+type ItemService interface {
 	FindItemByOrderId(ctx context.Context, id int) ([]order_item.OrderItem, error)
 	CreateOrderItem(ctx context.Context, item *order_item.OrderItem) error
 }
 
-type IOrderStatusService interface {
+type StatusService interface {
 	FindStatusByOrderId(ctx context.Context, id int) ([]order_status.OrderStatus, error)
-	CreateOrderStatus(ctx context.Context, status *order_status.OrderStatus) error
+	UpdateOrderStatus(ctx context.Context, status *order_status.OrderStatus) error
 }
 
 type Controller struct {
-	orderService       IOrderService
-	orderItemService   IOrderItemService
-	orderStatusService IOrderStatusService
+	orderService       BaseService
+	orderItemService   ItemService
+	orderStatusService StatusService
 }
 
-func NewController(orderService IOrderService, orderItemService IOrderItemService, orderStatusService IOrderStatusService) *Controller {
+func NewController(orderService BaseService, orderItemService ItemService, orderStatusService StatusService) *Controller {
 	return &Controller{
 		orderService,
 		orderItemService,
@@ -248,7 +248,7 @@ func (c *Controller) CreateOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.orderStatusService.CreateOrderStatus(r.Context(), &orderStatus)
+	err = c.orderStatusService.UpdateOrderStatus(r.Context(), &orderStatus)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Could not create order: %s\n", err))

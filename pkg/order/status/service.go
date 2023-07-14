@@ -4,11 +4,18 @@ import "context"
 
 type IRepository interface {
 	FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatus, error)
-	CreateOrderStatus(ctx context.Context, status *OrderStatus) error
+	UpdateOrderStatus(ctx context.Context, status *OrderStatus) error
 }
 
 type Service struct {
 	repository IRepository
+}
+
+type UpdateOrderStatusCommand struct {
+	status          string
+	source          string
+	orderId         *int
+	orderExternalId *string
 }
 
 func NewOrderService(repository IRepository) *Service {
@@ -21,6 +28,7 @@ func (s *Service) FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatu
 	return s.repository.FindStatusByOrderId(ctx, id)
 }
 
-func (s *Service) CreateOrderStatus(ctx context.Context, status *OrderStatus) error {
-	return s.repository.CreateOrderStatus(ctx, status)
+func (s *Service) UpdateOrderStatus(ctx context.Context, status *OrderStatus) error {
+
+	return s.repository.UpdateOrderStatus(ctx, status)
 }

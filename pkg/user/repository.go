@@ -8,8 +8,7 @@ var Schema = `
  	name VARCHAR(255),
  	email VARCHAR(255),
 	address VARCHAR(255),    
-	phone_number VARCHAR(255),    
-    order_item_id INT,
+	phone_number VARCHAR(255),
     PRIMARY KEY (id)
 );`
 
