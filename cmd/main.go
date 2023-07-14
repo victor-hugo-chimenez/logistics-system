@@ -70,6 +70,10 @@ func main() {
 	orderService := order.NewOrderService(orderRepository)
 	orderController := order.NewController(orderService, orderItemService, orderStatusService)
 
+	productRepository := products.NewProductRepository(db)
+	productService := products.NewProductService(productRepository)
+	productController := products.NewProductController(productService)
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/delivery", middleware(deliveryController.HandleDeliveryRequest))
@@ -79,6 +83,8 @@ func main() {
 	mux.HandleFunc("/order/item", middleware(orderController.HandleOrderItemRequest))
 	mux.HandleFunc("/order/status", middleware(orderController.HandleOrderStatusRequest))
 	mux.HandleFunc("/order", middleware(orderController.HandleOrderRequest))
+
+	mux.HandleFunc("/product", middleware(productController.HandleProductRequest))
 
 	serverAddress := "127.0.0.1:3000"
 

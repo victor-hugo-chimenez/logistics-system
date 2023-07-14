@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-type IService interface {
+type BaseService interface {
 	FindById(ctx context.Context, id int) (*Delivery, error)
 	FindAll(ctx context.Context) ([]Delivery, error)
 	UpdateDelivery(ctx context.Context, delivery *Delivery) (*Delivery, error)
@@ -18,10 +18,10 @@ type IService interface {
 }
 
 type Controller struct {
-	service IService
+	service BaseService
 }
 
-func NewController(service IService) *Controller {
+func NewController(service BaseService) *Controller {
 	return &Controller{
 		service,
 	}
