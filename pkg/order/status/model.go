@@ -1,12 +1,16 @@
 package order_status
 
-import (
-	"database/sql"
-)
+import "time"
 
 type OrderStatus struct {
-	ID              int          `db:"id"`
-	OrderId         int          `db:"order_id"`
-	Status          string       `db:"status"`
-	LastUpdatedDate sql.NullTime `db:"last_update_date"`
+	Version   int       `db:"version"`
+	OrderId   int       `db:"order_id"`
+	Event     Event     `db:"event"`
+	CreatedAt time.Time `db:"created_at"`
+}
+
+// Event TODO oq deveria ter dentro desse evento?
+type Event struct {
+	foo string
+	bar string
 }

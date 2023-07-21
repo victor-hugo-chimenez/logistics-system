@@ -4,7 +4,7 @@ import "context"
 
 type IRepository interface {
 	FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatus, error)
-	UpdateOrderStatus(ctx context.Context, status *OrderStatus) error
+	UpdateOrderStatusCheckpoint(ctx context.Context, status *OrderStatus) error
 }
 
 type Service struct {
@@ -28,7 +28,7 @@ func (s *Service) FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatu
 	return s.repository.FindStatusByOrderId(ctx, id)
 }
 
-func (s *Service) UpdateOrderStatus(ctx context.Context, status *OrderStatus) error {
+func (s *Service) UpdateOrderStatusCheckpoint(ctx context.Context, status *OrderStatus) error {
 
-	return s.repository.UpdateOrderStatus(ctx, status)
+	return s.repository.UpdateOrderStatusCheckpoint(ctx, status)
 }

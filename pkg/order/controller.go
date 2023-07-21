@@ -26,7 +26,7 @@ type ItemService interface {
 
 type StatusService interface {
 	FindStatusByOrderId(ctx context.Context, id int) ([]order_status.OrderStatus, error)
-	UpdateOrderStatus(ctx context.Context, status *order_status.OrderStatus) error
+	UpdateOrderStatusCheckpoint(ctx context.Context, status *order_status.OrderStatus) error
 }
 
 type Controller struct {
@@ -248,7 +248,7 @@ func (c *Controller) CreateOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.orderStatusService.UpdateOrderStatus(r.Context(), &orderStatus)
+	err = c.orderStatusService.UpdateOrderStatusCheckpoint(r.Context(), &orderStatus)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = io.WriteString(w, fmt.Sprintf("Could not create order: %s\n", err))
