@@ -2,13 +2,14 @@ package order_status
 
 import "context"
 
-type IRepository interface {
+type BaseRepository interface {
 	FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatus, error)
 	UpdateOrderStatusCheckpoint(ctx context.Context, status *OrderStatus) error
+	UpdateOrderStatusHistory(ctx context.Context, status *OrderStatus) error
 }
 
 type Service struct {
-	repository IRepository
+	repository BaseRepository
 }
 
 type UpdateOrderStatusCommand struct {
@@ -18,7 +19,7 @@ type UpdateOrderStatusCommand struct {
 	orderExternalId *string
 }
 
-func NewOrderService(repository IRepository) *Service {
+func NewOrderService(repository BaseRepository) *Service {
 	return &Service{
 		repository,
 	}
@@ -28,7 +29,7 @@ func (s *Service) FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatu
 	return s.repository.FindStatusByOrderId(ctx, id)
 }
 
-func (s *Service) UpdateOrderStatusCheckpoint(ctx context.Context, status *OrderStatus) error {
+func (s *Service) UpdateOrderStatusHistory(ctx context.Context, status *OrderStatus) error {
 
-	return s.repository.UpdateOrderStatusCheckpoint(ctx, status)
+	return s.repository.UpdateOrderStatusHistory(ctx, status)
 }

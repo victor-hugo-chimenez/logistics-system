@@ -51,6 +51,7 @@ func (r *Repository) FindStatusByOrderId(ctx context.Context, id int) ([]OrderSt
 func (r *Repository) UpdateOrderStatusCheckpoint(ctx context.Context, status *OrderStatus) error {
 	tx := r.db.MustBegin()
 
+	// Está na mesma transaction, será que causa um dirty read no version?
 	var currentVersion *int
 	tx.Get(&currentVersion, "SELECT MAX(version) from order_status_checkpoint where order_id=$1", status.OrderId)
 
