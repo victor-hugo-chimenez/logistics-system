@@ -40,7 +40,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 
 func (r *Repository) FindStatusByOrderId(ctx context.Context, id int) ([]OrderStatus, error) {
 	var orderStatus []OrderStatus
-	if err := r.db.Select(&orderStatus, "SELECT * FROM order_status_checkpoint WHERE order_id = $1 ORDER BY created_at DESC LIMIT 1", id); err != nil {
+	if err := r.db.Select(&orderStatus, "SELECT * FROM order_status_checkpoint WHERE order_id = $1 ORDER BY version DESC LIMIT 1", id); err != nil {
 		return nil, err
 	}
 	return orderStatus, nil
