@@ -7,7 +7,7 @@ import (
 
 type BaseRepository interface {
 	FindStatusByOrderId(ctx context.Context, id int) (*OrderStatus, error)
-	UpdateOrderStatusCheckpoint(ctx context.Context, id int) (*OrderStatus, error)
+	UpdateOrderStatusCheckpoint(ctx context.Context, status *OrderStatus) (*OrderStatus, error)
 	UpdateOrderStatusHistory(ctx context.Context, status *OrderStatus) error
 }
 
@@ -41,5 +41,5 @@ func (s *Service) UpdateOrderStatusCheckpoint(ctx context.Context, id int) (*Ord
 	if err != nil {
 		return nil, fmt.Errorf("failed to update order status checkpoint %s", err)
 	}
-	return s.repository.UpdateOrderStatusCheckpoint(ctx, orderStatus.OrderId)
+	return s.repository.UpdateOrderStatusCheckpoint(ctx, orderStatus)
 }

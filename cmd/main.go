@@ -87,7 +87,7 @@ func main() {
 			case t := <-orderStatusHistoryTicker.C:
 				fmt.Println("Tick at", t)
 				// TODO como vou passar o order id aqui? Teria q fazer pra todos certo?
-				orderStatusService.UpdateOrderStatusCheckpoint()
+				orderStatusService.UpdateOrderStatusCheckpoint(context.Background(), 1)
 			}
 		}
 	}()
