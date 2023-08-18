@@ -25,7 +25,7 @@ type ItemService interface {
 }
 
 type StatusService interface {
-	FindStatusByOrderId(ctx context.Context, id int) ([]order_status.OrderStatus, error)
+	FindStatusByOrderId(ctx context.Context, id int) (*order_status.OrderStatus, error)
 	UpdateOrderStatusHistory(ctx context.Context, status *order_status.OrderStatus) error
 }
 

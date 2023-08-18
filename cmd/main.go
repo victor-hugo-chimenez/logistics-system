@@ -15,6 +15,7 @@ import (
 	"logistics_system/pkg/user"
 	"net"
 	"net/http"
+	"time"
 )
 
 const (
@@ -74,6 +75,23 @@ func main() {
 	productService := products.NewProductService(productRepository)
 	productController := products.NewProductController(productService)
 
+	orderStatusHistoryTicker := time.NewTicker(60 * time.Second)
+	done := make(chan bool)
+
+	go func() {
+		log.Printf("oi")
+		for {
+			select {
+			case <-done:
+				return
+			case t := <-orderStatusHistoryTicker.C:
+				fmt.Println("Tick at", t)
+				// TODO como vou passar o order id aqui? Teria q fazer pra todos certo?
+				orderStatusService.UpdateOrderStatusCheckpoint()
+			}
+		}
+	}()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/delivery", middleware(deliveryController.HandleDeliveryRequest))
@@ -101,8 +119,12 @@ func main() {
 	log.Printf("Server listening on %s", serverAddress)
 	err := server.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) {
+		orderStatusHistoryTicker.Stop()
+		done <- true
 		fmt.Printf("server closed\n")
 	} else if err != nil {
+		orderStatusHistoryTicker.Stop()
+		done <- true
 		fmt.Printf("error listening for server: %s\n", err)
 	}
 }
